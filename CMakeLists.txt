@@ -89,13 +89,16 @@ if(CMAKE_CROSSCOMPILING)
     string(REGEX REPLACE "^(.+)/.+$" "\\1" COMPILER_PATH ${CMAKE_C_COMPILER})
     utils_write_script("export PATH=\"${COMPILER_PATH}:$PATH\"" WRITE_ALL)
 
+    string(REGEX REPLACE "^.+/(.+)-gcc$" "\\1" COMPILER_HOST ${CMAKE_C_COMPILER})
+    utils_write_script("export COMPILER_HOST=\"${COMPILER_HOST}\"" WRITE_ALL)
+
     utils_write_script("export CFLAGS=" WRITE_ALL)
     utils_write_script("export CPPFLAGS=" WRITE_ALL)
     utils_write_script("export CXXFLAGS=" WRITE_ALL)
     utils_write_script("export LDFLAGS=" WRITE_ALL)
 endif()
 
-set(MAKE_CLEAN "cd ${INTERMEDIATE_DIR} && ${CMAKE_MAKE_PROGRAM} distclean")
+set(MAKE_CLEAN "${CMAKE_MAKE_PROGRAM} -C ${INTERMEDIATE_DIR} distclean")
 set(SKIP_CLEAN "# There is nothing to be cleaned.")
 
 if(SUPPORT_CLEAN)
@@ -129,8 +132,7 @@ if(ENABLE_CONFIGURE)
     list(APPEND CONFIGURE_COMMAND "--libdir=${INTERMEDIATE_DIR}/install")
 
     if(CMAKE_CROSSCOMPILING)
-        string(REGEX REPLACE "^.+/(.+)-gcc$" "\\1" COMPILER_HOST ${CMAKE_C_COMPILER})
-        list(APPEND CONFIGURE_COMMAND "--host=${COMPILER_HOST}")
+        list(APPEND CONFIGURE_COMMAND "--host=$COMPILER_HOST")
     endif()
 
     if(ENABLE_SHARED)
@@ -152,9 +154,9 @@ else()
     utils_write_script("# There is nothing to be configured." WRITE_COMPILE)
 endif()
 
-utils_write_script("cd ${INTERMEDIATE_DIR} && ${CMAKE_MAKE_PROGRAM}" WRITE_COMPILE)
+utils_write_script("${CMAKE_MAKE_PROGRAM} -C ${INTERMEDIATE_DIR}" WRITE_COMPILE)
 
-utils_write_script("cd ${INTERMEDIATE_DIR} && ${CMAKE_MAKE_PROGRAM} install" WRITE_INSTALL)
+utils_write_script("${CMAKE_MAKE_PROGRAM} -C ${INTERMEDIATE_DIR} install" WRITE_INSTALL)
 
 add_custom_target(Customize_compile
     COMMAND "/bin/bash" "${COMPILE_SCRIPT}"
